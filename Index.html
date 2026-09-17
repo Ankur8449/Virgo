@@ -1,0 +1,1233 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Home, Compass, Video, MessageSquare, Bell, User, PlusSquare, 
+  Search, Heart, Share2, Bookmark, MoreHorizontal, Settings, 
+  TrendingUp, DollarSign, Shield, Flag, Award, CheckCircle2, 
+  BarChart3, PieChart, Lock, Mail, Key, Sparkles, Image, Play, 
+  Send, Smile, ThumbsUp, AlertTriangle, Eye, RefreshCw, ChevronRight,
+  ChevronLeft, Moon, Sun, Download, ShoppingBag, CreditCard, Layers,
+  Check, X, LogOut, Sliders, FileText, Globe, Radio, Cpu, Wifi, WifiOff,
+  Filter, UserCheck, UserX, AlertCircle, Plus, Trash2, CheckSquare
+} from 'lucide-[#6C5CE7]';
+
+// Direct SVG or Lucide icons fallback wrapper
+import * as LucideIcons from 'lucide-react';
+
+const STORAGE_KEY = 'vyro_app_database_v2';
+
+const INITIAL_DB_STATE = {
+  currentUser: {
+    id: 1,
+    name: "Aarav Sharma",
+    username: "aarav_tech",
+    email: "aarav@vyro.app",
+    role: "CREATOR", // USER, CREATOR, ADVERTISER, ADMIN
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    cover: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80",
+    bio: "Building next-gen digital experiences. Visual creator & AI engineer. ðŸš€",
+    website: "https://vyro.app",
+    verified: true,
+    followers: 14200,
+    following: 380,
+    postsCount: 42,
+    coins: 2450,
+    earnings: 48.50,
+    monetizationStatus: "APPROVED",
+    isCreatorMode: true
+  },
+
+  apiConnected: false,
+  lastSyncTime: null,
+
+  posts: [
+    {
+      id: "local_1",
+      authorId: 101,
+      authorName: "Priya Patel",
+      authorUsername: "priya_design",
+      authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      verified: true,
+      timestamp: "10 mins ago",
+      content: "Just finished designing the updated dark mode UI for VYRO! ðŸŽ¨ Check out the vibrant neon accents and glassmorphism components. #UI #UX #Design #VYRO",
+      mediaType: "IMAGE",
+      mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
+      likes: 1420,
+      comments: 98,
+      reposts: 42,
+      isLiked: false,
+      isBookmarked: false,
+      type: "ORGANIC"
+    },
+    {
+      id: "local_ad_1",
+      authorId: 999,
+      authorName: "Nexus Cloud AI",
+      authorUsername: "nexuscloud",
+      authorAvatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80",
+      verified: true,
+      timestamp: "Sponsored",
+      content: "Deploy high-performance web applications worldwide with microsecond latency. Try Nexus Cloud Free Tier today!",
+      mediaType: "IMAGE",
+      mediaUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
+      likes: 830,
+      comments: 24,
+      reposts: 12,
+      isLiked: false,
+      isBookmarked: false,
+      type: "SPONSORED",
+      ctaUrl: "https://nexuscloud.io"
+    },
+    {
+      id: "local_poll_1",
+      authorId: 102,
+      authorName: "Karan Verma",
+      authorUsername: "karanv_tech",
+      authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      verified: true,
+      timestamp: "2 hours ago",
+      content: "What is your primary frontend framework choice for 2026/2027 development?",
+      mediaType: "POLL",
+      pollOptions: [
+        { id: "p1", text: "React / Next.js", votes: 842 },
+        { id: "p2", text: "Vue / Nuxt.js", votes: 230 },
+        { id: "p3", text: "Svelte / SvelteKit", votes: 310 },
+        { id: "p4", text: "Solid / Astro", votes: 115 }
+      ],
+      pollTotalVotes: 1497,
+      hasVoted: false,
+      likes: 620,
+      comments: 54,
+      reposts: 28,
+      isLiked: false,
+      isBookmarked: false,
+      type: "ORGANIC"
+    }
+  ],
+
+  reels: [
+    {
+      id: "reel_1",
+      creatorName: "Ananya Sharma",
+      creatorUsername: "ananya_creates",
+      creatorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      caption: "Late night cyberpunk aesthetic in Neo Tokyo ðŸŒƒâœ¨ #Tokyo #Cyberpunk #Travel #VYROReels",
+      musicTrack: "Original Sound - Synthwave Beats",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tokyo-street-with-neon-lights-at-night-41541-large.mp4",
+      likes: 45200,
+      comments: 812,
+      shares: 1420,
+      views: "128.4K",
+      isLiked: false
+    },
+    {
+      id: "reel_2",
+      creatorName: "Devon Lane",
+      creatorUsername: "devon_codes",
+      creatorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      caption: "3 CSS animation tricks you need to level up your UI/UX in 2026 ðŸ’»ðŸ”¥ #webdev #frontend",
+      musicTrack: "Lo-Fi Chill Hop - Dev Beats",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-man-working-on-a-computer-keyboard-41386-large.mp4",
+      likes: 12800,
+      comments: 342,
+      shares: 890,
+      views: "45.1K",
+      isLiked: false
+    }
+  ],
+
+  stories: [
+    {
+      id: "story_1",
+      userId: 101,
+      userName: "Priya",
+      userAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      hasUnseen: true,
+      mediaUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "story_2",
+      userId: 102,
+      userName: "Karan",
+      userAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      hasUnseen: true,
+      mediaUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&auto=format&fit=crop&q=80"
+    }
+  ],
+
+  conversations: [
+    {
+      id: "conv_1",
+      participantName: "Priya Patel",
+      participantUsername: "priya_design",
+      participantAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      lastMessage: "Are we still on for the design system review?",
+      timestamp: "10:42 AM",
+      unread: 2,
+      online: true,
+      messages: [
+        { id: "m1", senderId: 101, text: "Hey Aarav! Checked out the live API feed on VYRO.", time: "10:30 AM" },
+        { id: "m2", senderId: 1, text: "Thanks Priya! The JSON sync is working smoothly.", time: "10:35 AM" },
+        { id: "m3", senderId: 101, text: "Are we still on for the design system review?", time: "10:42 AM" }
+      ]
+    }
+  ],
+
+  notifications: [
+    { id: "n1", type: "LIKE", actor: "Priya Patel", text: "liked your recent post", time: "5 mins ago", read: false },
+    { id: "n2", type: "TIP", actor: "Rohan Das", text: "sent you a 100 VYRO Coins tip!", time: "1 hour ago", read: false },
+    { id: "n3", type: "EARNING", actor: "VYRO Creator Studio", text: "Your Ad Revenue payout of $24.50 is ready.", time: "1 day ago", read: true }
+  ],
+
+  adsConfig: {
+    publisherId: "pub-8492049201940192",
+    adsenseStatus: "ACTIVE", // ACTIVE, PENDING, UNLINKED
+    headerAdEnabled: true,
+    feedAdEnabled: true,
+    sidebarAdEnabled: true
+  },
+
+  moderationQueue: [
+    { id: "rep_1", targetType: "POST", targetId: "local_1", reason: "Potential Spam / Self Promotion", reporter: "user_492", status: "PENDING" }
+  ],
+
+  adminStats: {
+    totalUsers: 142850,
+    activeUsersToday: 38200,
+    totalPosts: 892100,
+    platformRevenue: 18420.50
+  }
+};
+
+export default function App() {
+  const [db, setDb] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : INITIAL_DB_STATE;
+    } catch (e) {
+      return INITIAL_DB_STATE;
+    }
+  });
+
+  const [activeTab, setActiveTab] = useState('feed'); // feed, discover, reels, messages, notifications, profile, creator, monetization, ads, admin
+  const [isFetchingApi, setIsFetchingApi] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
+  const [tipModalData, setTipModalData] = useState(null);
+
+  // Sync state to LocalStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    } catch (e) {
+      console.error("Failed to persist state", e);
+    }
+  }, [db]);
+
+  // Show Toast Helper
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3200);
+  };
+
+  const fetchLiveNetworkData = async () => {
+    setIsFetchingApi(true);
+    try {
+      // Fetch live posts from JSONPlaceholder
+      const postsRes = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=6');
+      const postsData = await postsRes.json();
+
+      // Fetch live users
+      const usersRes = await fetch('https://jsonplaceholder.typicode.com/users?_limit=6');
+      const usersData = await usersRes.json();
+
+      // Transform into VYRO Post Model
+      const livePostsTransformed = postsData.map((item, index) => {
+        const user = usersData[index % usersData.length] || {};
+        return {
+          id: `api_post_${item.id}`,
+          authorId: user.id || index + 10,
+          authorName: user.name || "Live Internet Creator",
+          authorUsername: user.username ? user.username.toLowerCase() : `creator_${item.id}`,
+          authorAvatar: `https://i.pravatar.cc/150?u=${item.id}`,
+          verified: item.id % 2 === 0,
+          timestamp: "Live REST API",
+          content: `${item.title.toUpperCase()}: ${item.body}`,
+          mediaType: item.id % 3 === 0 ? "IMAGE" : "NONE",
+          mediaUrl: item.id % 3 === 0 ? `https://picsum.photos/seed/${item.id}/800/450` : null,
+          likes: Math.floor(Math.random() * 400) + 50,
+          comments: Math.floor(Math.random() * 80) + 5,
+          reposts: Math.floor(Math.random() * 20) + 1,
+          isLiked: false,
+          isBookmarked: false,
+          type: "ORGANIC"
+        };
+      });
+
+      // Update state with fetched API posts without overwriting local custom posts
+      setDb(prev => {
+        const existingIds = new Set(prev.posts.map(p => p.id));
+        const filteredNew = livePostsTransformed.filter(p => !existingIds.has(p.id));
+        return {
+          ...prev,
+          apiConnected: true,
+          lastSyncTime: new Date().toLocaleTimeString(),
+          posts: [...filteredNew, ...prev.posts]
+        };
+      });
+
+      showToast("Connected to Internet! Synced live REST posts & users.", "success");
+    } catch (error) {
+      console.error("API Fetch Error:", error);
+      showToast("Unable to reach internet API. Operating in local state fallback mode.", "error");
+      setDb(prev => ({ ...prev, apiConnected: false }));
+    } finally {
+      setIsFetchingApi(false);
+    }
+  };
+
+  // Initial mount live network check
+  useEffect(() => {
+    fetchLiveNetworkData();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#0B0B12] text-gray-100 flex flex-col font-sans antialiased selection:bg-[#6C5CE7] selection:text-white">
+      
+      {/* GLOBAL TOAST NOTIFICATION */}
+      {toast && (
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
+          toast.type === 'error' ? 'bg-red-950/80 border-red-500/50 text-red-200' :
+          toast.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200' :
+          'bg-[#151522]/90 border-[#6C5CE7]/40 text-white'
+        }`}>
+          <LucideIcons.Sparkles className="w-5 h-5 text-[#00CEC9]" />
+          <span className="text-xs font-semibold">{toast.message}</span>
+        </div>
+      )}
+
+      {/* MODAL: CREATE NEW POST */}
+      {createPostModalOpen && (
+        <CreatePostModal 
+          db={db} 
+          setDb={setDb} 
+          onClose={() => setCreatePostModalOpen(false)} 
+          showToast={showToast} 
+        />
+      )}
+
+      {/* MODAL: TIP CREATOR */}
+      {tipModalData && (
+        <TipCreatorModal 
+          recipient={tipModalData} 
+          db={db} 
+          setDb={setDb} 
+          onClose={() => setTipModalData(null)} 
+          showToast={showToast} 
+        />
+      )}
+
+      {/* TOP NETWORK STATUS BAR */}
+      <header className="bg-[#151522]/80 backdrop-blur-md border-b border-white/10 px-4 py-2 sticky top-0 z-30 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#6C5CE7] to-[#00CEC9] flex items-center justify-center font-black text-white text-sm shadow-md shadow-[#6C5CE7]/30">
+            V
+          </div>
+          <span className="font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-[#00CEC9] text-base">
+            VYRO
+          </span>
+          <span className="hidden sm:inline-block text-[10px] text-gray-400 border border-white/10 px-2 py-0.5 rounded-full">
+            v2.4 Production
+          </span>
+        </div>
+
+        {/* REST API STATUS INDICATOR */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={fetchLiveNetworkData} 
+            disabled={isFetchingApi}
+            className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1 rounded-xl text-gray-300 transition text-[11px]"
+          >
+            <LucideIcons.RefreshCw className={`w-3.5 h-3.5 text-[#00CEC9] ${isFetchingApi ? 'animate-spin' : ''}`} />
+            <span>{isFetchingApi ? 'Syncing...' : 'Sync REST API'}</span>
+          </button>
+
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+            db.apiConnected 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}>
+            {db.apiConnected ? <LucideIcons.Wifi className="w-3 h-3" /> : <LucideIcons.WifiOff className="w-3 h-3" />}
+            <span>{db.apiConnected ? `REST Online (${db.lastSyncTime || 'Active'})` : 'Local Fallback'}</span>
+          </div>
+        </div>
+      </header>
+
+      {/* APP BODY LAYOUT */}
+      <div className="max-w-7xl mx-auto w-full flex flex-1">
+        
+        {/* DESKTOP NAVIGATION SIDEBAR */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-white/10 p-4 sticky top-[45px] h-[calc(100vh-45px)] justify-between bg-[#0B0B12]">
+          <div className="space-y-6">
+            <nav className="space-y-1">
+              <SidebarNavLink icon={LucideIcons.Home} label="Home Feed" active={activeTab === 'feed'} onClick={() => setActiveTab('feed')} />
+              <SidebarNavLink icon={LucideIcons.Compass} label="Discover" active={activeTab === 'discover'} onClick={() => setActiveTab('discover')} />
+              <SidebarNavLink icon={LucideIcons.Video} label="VYRO Reels" active={activeTab === 'reels'} onClick={() => setActiveTab('reels')} badge="HOT" />
+              <SidebarNavLink icon={LucideIcons.MessageSquare} label="Messages" active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} badge={db.conversations.reduce((acc, c) => acc + c.unread, 0)} />
+              <SidebarNavLink icon={LucideIcons.Bell} label="Notifications" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} badge={db.notifications.filter(n => !n.read).length} />
+              <SidebarNavLink icon={LucideIcons.User} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
+              
+              <div className="pt-4 border-t border-white/10 my-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 mb-2">Creator Hub</p>
+                <SidebarNavLink icon={LucideIcons.BarChart3} label="Analytics Studio" active={activeTab === 'creator'} onClick={() => setActiveTab('creator')} />
+                <SidebarNavLink icon={LucideIcons.DollarSign} label="Monetization" active={activeTab === 'monetization'} onClick={() => setActiveTab('monetization')} />
+                <SidebarNavLink icon={LucideIcons.Radio} label="Ads & AdSense" active={activeTab === 'ads'} onClick={() => setActiveTab('ads')} />
+              </div>
+
+              {db.currentUser.role === 'ADMIN' && (
+                <div className="pt-2">
+                  <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest px-3 mb-2">System Admin</p>
+                  <SidebarNavLink icon={LucideIcons.Shield} label="Control Panel" active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} color="text-red-400" />
+                </div>
+              )}
+            </nav>
+          </div>
+
+          {/* SIDEBAR FOOTER ACTION */}
+          <div className="space-y-3 pt-4 border-t border-white/10">
+            <button 
+              onClick={() => setCreatePostModalOpen(true)}
+              className="w-full py-3 bg-gradient-to-r from-[#6C5CE7] to-[#00CEC9] text-white font-bold rounded-xl shadow-lg shadow-[#6C5CE7]/25 hover:opacity-90 transition flex items-center justify-center gap-2 text-xs"
+            >
+              <LucideIcons.PlusSquare className="w-4 h-4" />
+              <span>Create Post</span>
+            </button>
+
+            <div className="flex items-center justify-between p-2 rounded-xl bg-[#151522] border border-white/10">
+              <div className="flex items-center gap-2">
+                <img src={db.currentUser.avatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+                <div className="text-left leading-tight">
+                  <p className="text-xs font-bold truncate w-24 text-white">{db.currentUser.name}</p>
+                  <p className="text-[10px] text-gray-400">@{db.currentUser.username}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* MAIN VIEW CONTAINER */}
+        <main className="flex-1 min-w-0 border-r border-white/10 pb-20 md:pb-6">
+          {activeTab === 'feed' && <SocialFeedSection db={db} setDb={setDb} setTipModalData={setTipModalData} showToast={showToast} />}
+          {activeTab === 'discover' && <DiscoverSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'reels' && <ReelsSection db={db} setDb={setDb} setTipModalData={setTipModalData} showToast={showToast} />}
+          {activeTab === 'messages' && <MessagesSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'notifications' && <NotificationsSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'profile' && <ProfileSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'creator' && <CreatorStudioSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'monetization' && <MonetizationSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'ads' && <AdsManagementSection db={db} setDb={setDb} showToast={showToast} />}
+          {activeTab === 'admin' && <AdminPanelSection db={db} setDb={setDb} showToast={showToast} />}
+        </main>
+
+        {/* DESKTOP RIGHT WIDGET PANEL */}
+        <aside className="hidden lg:block w-80 p-4 space-y-6 sticky top-[45px] h-[calc(100vh-45px)] overflow-y-auto bg-[#0B0B12]">
+          
+          {/* USER WALLET / COINS SUMMARY */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#151522] to-[#1A1A2E] border border-white/10 space-y-3 shadow-xl">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400 font-medium">VYRO Coin Balance</span>
+              <span className="text-[10px] bg-[#00CEC9]/20 text-[#00CEC9] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-2xl font-black text-white flex items-center gap-1.5">
+                <LucideIcons.Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                {db.currentUser.coins.toLocaleString()}
+              </h3>
+              <button 
+                onClick={() => {
+                  setDb(prev => ({ ...prev, currentUser: { ...prev.currentUser, coins: prev.currentUser.coins + 500 } }));
+                  showToast("Added 500 Test VYRO Coins to your wallet!", "success");
+                }}
+                className="text-xs bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg border border-white/10 transition"
+              >
+                + Refill Coins
+              </button>
+            </div>
+          </div>
+
+          {/* GOOGLE ADSENSE SIDEBAR BANNER DEMO */}
+          {db.adsConfig.sidebarAdEnabled && (
+            <div className="p-4 rounded-2xl bg-[#151522] border border-dashed border-white/20 text-center relative overflow-hidden">
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold block mb-2">Google AdSense Placement</span>
+              <div className="h-36 bg-gradient-to-br from-indigo-900/40 via-purple-900/20 to-blue-900/40 rounded-xl flex flex-col items-center justify-center p-3 border border-white/5">
+                <LucideIcons.Globe className="w-6 h-6 text-[#00CEC9] mb-1 opacity-80" />
+                <p className="text-xs font-bold text-gray-200">Interactive Cloud Ad Unit</p>
+                <p className="text-[10px] text-gray-400 mt-1">Publisher: {db.adsConfig.publisherId}</p>
+                <a href="https://adsense.google.com" target="_blank" rel="noreferrer" className="mt-2 text-[10px] bg-[#6C5CE7] px-2.5 py-1 rounded text-white font-bold">
+                  Sponsored Link
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* TRENDING HASHTAGS */}
+          <div className="p-4 rounded-2xl bg-[#151522] border border-white/10 space-y-3">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              <LucideIcons.TrendingUp className="w-4 h-4 text-[#00CEC9]" />
+              Trending Hashtags
+            </h3>
+            <div className="space-y-2">
+              {[
+                { tag: "#VYROLaunch", posts: "42.8K posts" },
+                { tag: "#Web2026", posts: "128.1K posts" },
+                { tag: "#AI_Agents", posts: "89.4K posts" },
+                { tag: "#CreatorMonetization", posts: "15.3K posts" }
+              ].map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center hover:bg-white/5 p-2 rounded-xl cursor-pointer transition">
+                  <div>
+                    <p className="text-xs font-bold text-white">{item.tag}</p>
+                    <p className="text-[10px] text-gray-400">{item.posts}</p>
+                  </div>
+                  <LucideIcons.ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0B0B12]/95 backdrop-blur-md border-t border-white/10 flex justify-around py-2.5 z-40">
+        <button onClick={() => setActiveTab('feed')} className={`p-1.5 ${activeTab === 'feed' ? 'text-[#6C5CE7]' : 'text-gray-400'}`}>
+          <LucideIcons.Home className="w-5 h-5" />
+        </button>
+        <button onClick={() => setActiveTab('discover')} className={`p-1.5 ${activeTab === 'discover' ? 'text-[#6C5CE7]' : 'text-gray-400'}`}>
+          <LucideIcons.Compass className="w-5 h-5" />
+        </button>
+        <button onClick={() => setCreatePostModalOpen(true)} className="p-2 text-white bg-gradient-to-tr from-[#6C5CE7] to-[#00CEC9] rounded-xl shadow-lg">
+          <LucideIcons.PlusSquare className="w-5 h-5" />
+        </button>
+        <button onClick={() => setActiveTab('reels')} className={`p-1.5 ${activeTab === 'reels' ? 'text-[#00CEC9]' : 'text-gray-400'}`}>
+          <LucideIcons.Video className="w-5 h-5" />
+        </button>
+        <button onClick={() => setActiveTab('profile')} className={`p-1.5 ${activeTab === 'profile' ? 'text-[#6C5CE7]' : 'text-gray-400'}`}>
+          <LucideIcons.User className="w-5 h-5" />
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+function SidebarNavLink({ icon: Icon, label, active, onClick, badge, color }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-xs transition ${
+        active 
+          ? 'bg-[#6C5CE7]/20 text-[#6C5CE7] font-bold border border-[#6C5CE7]/30' 
+          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+      } ${color || ''}`}
+    >
+      <div className="flex items-center gap-3">
+        <Icon className="w-4 h-4" />
+        <span>{label}</span>
+      </div>
+      {badge !== undefined && (
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+          badge === 'HOT' ? 'bg-red-500/20 text-red-400' : 'bg-[#6C5CE7] text-white'
+        }`}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function SocialFeedSection({ db, setDb, setTipModalData, showToast }) {
+  const [feedFilter, setFeedFilter] = useState('FOR_YOU');
+
+  const toggleLike = (postId) => {
+    setDb(prev => ({
+      ...prev,
+      posts: prev.posts.map(p => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            isLiked: !p.isLiked,
+            likes: p.isLiked ? p.likes - 1 : p.likes + 1
+          };
+        }
+        return p;
+      })
+    }));
+  };
+
+  const toggleBookmark = (postId) => {
+    setDb(prev => ({
+      ...prev,
+      posts: prev.posts.map(p => {
+        if (p.id === postId) {
+          return { ...p, isBookmarked: !p.isBookmarked };
+        }
+        return p;
+      })
+    }));
+    showToast("Bookmark updated!");
+  };
+
+  const handleVotePoll = (postId, optionId) => {
+    setDb(prev => ({
+      ...prev,
+      posts: prev.posts.map(p => {
+        if (p.id === postId && !p.hasVoted) {
+          return {
+            ...p,
+            hasVoted: true,
+            pollTotalVotes: p.pollTotalVotes + 1,
+            pollOptions: p.pollOptions.map(opt => 
+              opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
+            )
+          };
+        }
+        return p;
+      })
+    }));
+    showToast("Vote recorded!");
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* FEED FILTER BAR */}
+      <div className="sticky top-[45px] bg-[#0B0B12]/90 backdrop-blur-md border-b border-white/10 p-4 z-20 flex items-center justify-between">
+        <div className="flex gap-4">
+          {['FOR_YOU', 'FOLLOWING', 'TRENDING'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setFeedFilter(tab)}
+              className={`text-xs font-bold pb-1 transition relative ${
+                feedFilter === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {tab.replace('_', ' ')}
+              {feedFilter === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C5CE7] rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 24-HOUR STORIES BAR */}
+      <div className="px-4 pt-1">
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex flex-col items-center gap-1 min-w-[65px] cursor-pointer">
+            <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#6C5CE7] flex items-center justify-center bg-white/5 hover:bg-white/10 transition">
+              <LucideIcons.PlusSquare className="w-5 h-5 text-[#00CEC9]" />
+            </div>
+            <span className="text-[10px] font-medium text-gray-400">Add Story</span>
+          </div>
+
+          {db.stories.map(s => (
+            <div key={s.id} className="flex flex-col items-center gap-1 min-w-[65px] cursor-pointer">
+              <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-[#6C5CE7] to-[#00CEC9]">
+                <img src={s.userAvatar} className="w-full h-full rounded-full object-cover border-2 border-[#0B0B12]" alt="" />
+              </div>
+              <span className="text-[10px] font-medium text-gray-300 truncate w-14 text-center">{s.userName}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* HEADER GOOGLE ADSENSE BANNER */}
+      {db.adsConfig.headerAdEnabled && (
+        <div className="mx-4 p-3 rounded-2xl bg-[#151522] border border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-[#6C5CE7]/20 text-[#6C5CE7]">
+              <LucideIcons.Radio className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">Google AdSense Feed Header Integration</p>
+              <p className="text-[10px] text-gray-400">Configured ID: {db.adsConfig.publisherId}</p>
+            </div>
+          </div>
+          <span className="text-[9px] bg-white/10 text-gray-400 font-bold px-2 py-1 rounded">Ad</span>
+        </div>
+      )}
+
+      {/* POSTS FEED */}
+      <div className="px-4 space-y-4">
+        {db.posts.map(post => (
+          <div key={post.id} className={`p-4 rounded-2xl border transition ${
+            post.type === 'SPONSORED' 
+              ? 'bg-gradient-to-b from-[#151522] to-[#1A1A2E] border-[#00CEC9]/30' 
+              : 'bg-[#151522] border-white/10'
+          }`}>
+            {/* POST AUTHOR */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <img src={post.authorAvatar} className="w-9 h-9 rounded-full object-cover" alt="" />
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-bold text-xs text-white">{post.authorName}</h4>
+                    {post.verified && <LucideIcons.CheckCircle2 className="w-3.5 h-3.5 text-[#00CEC9]" />}
+                    {post.type === 'SPONSORED' && (
+                      <span className="text-[9px] bg-[#00CEC9]/20 text-[#00CEC9] font-bold px-1.5 py-0.5 rounded">
+                        Sponsored
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-400">@{post.authorUsername} â€¢ {post.timestamp}</p>
+                </div>
+              </div>
+              <button className="text-gray-400 hover:text-white p-1">
+                <LucideIcons.MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* CONTENT */}
+            <p className="text-xs text-gray-200 mb-3 whitespace-pre-line leading-relaxed">{post.content}</p>
+
+            {/* MEDIA */}
+            {post.mediaType === 'IMAGE' && post.mediaUrl && (
+              <div className="rounded-xl overflow-hidden border border-white/10 mb-3">
+                <img src={post.mediaUrl} className="w-full h-auto max-h-[400px] object-cover" alt="" />
+              </div>
+            )}
+
+            {/* POLL */}
+            {post.mediaType === 'POLL' && post.pollOptions && (
+              <div className="space-y-2 mb-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                {post.pollOptions.map(opt => {
+                  const pct = post.pollTotalVotes > 0 ? Math.round((opt.votes / post.pollTotalVotes) * 100) : 0;
+                  return (
+                    <button
+                      key={opt.id}
+                      disabled={post.hasVoted}
+                      onClick={() => handleVotePoll(post.id, opt.id)}
+                      className="w-full relative overflow-hidden p-2 rounded-lg border border-white/10 text-left transition hover:border-[#6C5CE7]"
+                    >
+                      <div 
+                        className="absolute top-0 bottom-0 left-0 bg-[#6C5CE7]/30 transition-all duration-500" 
+                        style={{ width: `${pct}%` }} 
+                      />
+                      <div className="relative flex justify-between items-center text-xs font-semibold">
+                        <span>{opt.text}</span>
+                        {post.hasVoted && <span>{pct}%</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+                <p className="text-[10px] text-gray-400 text-right">{post.pollTotalVotes} total votes</p>
+              </div>
+            )}
+
+            {/* ACTIONS */}
+            <div className="flex items-center justify-between border-t border-white/10 pt-3 text-gray-400 text-xs font-semibold">
+              <button 
+                onClick={() => toggleLike(post.id)}
+                className={`flex items-center gap-1.5 hover:text-red-400 transition ${post.isLiked ? 'text-red-500' : ''}`}
+              >
+                <LucideIcons.Heart className={`w-4 h-4 ${post.isLiked ? 'fill-red-500' : ''}`} />
+                <span>{post.likes}</span>
+              </button>
+
+              <button className="flex items-center gap-1.5 hover:text-[#00CEC9] transition">
+                <LucideIcons.MessageSquare className="w-4 h-4" />
+                <span>{post.comments}</span>
+              </button>
+
+              <button 
+                onClick={() => setTipModalData({ name: post.authorName, username: post.authorUsername })}
+                className="flex items-center gap-1.5 text-yellow-400 hover:text-yellow-300 transition"
+              >
+                <LucideIcons.Sparkles className="w-4 h-4 fill-yellow-400/20" />
+                <span>Tip Coins</span>
+              </button>
+
+              <button 
+                onClick={() => toggleBookmark(post.id)}
+                className={`hover:text-white transition ${post.isBookmarked ? 'text-[#6C5CE7]' : ''}`}
+              >
+                <LucideIcons.Bookmark className={`w-4 h-4 ${post.isBookmarked ? 'fill-[#6C5CE7]' : ''}`} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReelsSection({ db, setDb, setTipModalData, showToast }) {
+  const [reelIdx, setReelIdx] = useState(0);
+  const currentReel = db.reels[reelIdx];
+
+  const handleNext = () => {
+    if (reelIdx < db.reels.length - 1) setReelIdx(prev => prev + 1);
+  };
+
+  const handlePrev = () => {
+    if (reelIdx > 0) setReelIdx(prev => prev - 1);
+  };
+
+  return (
+    <div className="relative h-[calc(100vh-100px)] md:h-[calc(100vh-45px)] bg-black flex items-center justify-center overflow-hidden">
+      <div className="relative w-full max-w-sm h-full bg-gray-900 overflow-hidden flex items-center justify-center border-x border-white/10">
+        <video 
+          src={currentReel.videoUrl} 
+          autoPlay 
+          loop 
+          muted 
+          className="w-full h-full object-cover"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 flex flex-col justify-between p-4">
+          <div className="flex justify-between items-center">
+            <span className="text-white font-extrabold text-xs tracking-wider bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">
+              VYRO REELS
+            </span>
+            <button onClick={() => showToast("Reel link copied!")} className="text-white p-2 rounded-full bg-black/50 backdrop-blur-md">
+              <LucideIcons.Share2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <img src={currentReel.creatorAvatar} className="w-9 h-9 rounded-full border border-white object-cover" alt="" />
+              <div>
+                <h4 className="font-bold text-xs text-white">{currentReel.creatorName}</h4>
+                <p className="text-[10px] text-gray-300">@{currentReel.creatorUsername}</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-200 line-clamp-2">{currentReel.caption}</p>
+          </div>
+        </div>
+
+        {/* RIGHT SIDEBAR ACTIONS */}
+        <div className="absolute right-3 bottom-20 flex flex-col items-center gap-5 z-20">
+          <button className="flex flex-col items-center gap-1 text-white">
+            <div className="p-2.5 bg-black/50 backdrop-blur-md rounded-full hover:bg-red-500/20 hover:text-red-400 transition">
+              <LucideIcons.Heart className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold">{currentReel.likes}</span>
+          </button>
+
+          <button 
+            onClick={() => setTipModalData({ name: currentReel.creatorName, username: currentReel.creatorUsername })}
+            className="flex flex-col items-center gap-1 text-yellow-400"
+          >
+            <div className="p-2.5 bg-yellow-500/20 backdrop-blur-md rounded-full border border-yellow-400/30">
+              <LucideIcons.Sparkles className="w-5 h-5 fill-yellow-400" />
+            </div>
+            <span className="text-[10px] font-bold">Tip</span>
+          </button>
+        </div>
+
+        {/* SWIPE CONTROL */}
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+          {reelIdx > 0 && (
+            <button onClick={handlePrev} className="p-2 bg-black/60 text-white rounded-full">
+              <LucideIcons.ChevronLeft className="w-4 h-4 rotate-90" />
+            </button>
+          )}
+          {reelIdx < db.reels.length - 1 && (
+            <button onClick={handleNext} className="p-2 bg-black/60 text-white rounded-full">
+              <LucideIcons.ChevronRight className="w-4 h-4 rotate-90" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MessagesSection({ db, setDb, showToast }) {
+  const [activeConvId, setActiveConvId] = useState(db.conversations[0]?.id || null);
+  const [messageText, setMessageText] = useState('');
+
+  const activeConv = db.conversations.find(c => c.id === activeConvId);
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!messageText.trim() || !activeConvId) return;
+
+    const newMsg = {
+      id: `msg_${Date.now()}`,
+      senderId: db.currentUser.id,
+      text: messageText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setDb(prev => ({
+      ...prev,
+      conversations: prev.conversations.map(c => {
+        if (c.id === activeConvId) {
+          return {
+            ...c,
+            lastMessage: messageText,
+            messages: [...c.messages, newMsg]
+          };
+        }
+        return c;
+      })
+    }));
+
+    setMessageText('');
+  };
+
+  return (
+    <div className="h-[calc(100vh-100px)] md:h-[calc(100vh-45px)] flex border-r border-white/10">
+      <div className="w-full md:w-80 border-r border-white/10 flex flex-col bg-[#0B0B12]">
+        <div className="p-4 border-b border-white/10">
+          <h2 className="font-extrabold text-base text-white mb-2">Direct Messages</h2>
+        </div>
+
+        <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+          {db.conversations.map(conv => (
+            <div 
+              key={conv.id}
+              onClick={() => setActiveConvId(conv.id)}
+              className={`p-3 flex items-center gap-3 cursor-pointer transition ${
+                activeConvId === conv.id ? 'bg-[#6C5CE7]/15 border-l-4 border-[#6C5CE7]' : 'hover:bg-white/5'
+              }`}
+            >
+              <img src={conv.participantAvatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline">
+                  <h4 className="font-bold text-xs text-white truncate">{conv.participantName}</h4>
+                  <span className="text-[9px] text-gray-500">{conv.timestamp}</span>
+                </div>
+                <p className="text-[11px] text-gray-400 truncate">{conv.lastMessage}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {activeConv ? (
+        <div className="hidden md:flex flex-1 flex-col bg-[#0B0B12]">
+          <div className="p-4 border-b border-white/10 flex items-center gap-3">
+            <img src={activeConv.participantAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+            <div>
+              <h3 className="font-bold text-xs text-white">{activeConv.participantName}</h3>
+              <span className="text-[9px] text-emerald-400">Online</span>
+            </div>
+          </div>
+
+          <div className="flex-1 p-4 overflow-y-auto space-y-3">
+            {activeConv.messages.map(m => {
+              const isMe = m.senderId === db.currentUser.id;
+              return (
+                <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[70%] p-3 rounded-2xl text-xs space-y-1 ${
+                    isMe ? 'bg-[#6C5CE7] text-white rounded-br-none' : 'bg-[#151522] text-gray-200 border border-white/10 rounded-bl-none'
+                  }`}>
+                    <p>{m.text}</p>
+                    <p className="text-[9px] text-right opacity-70">{m.time}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <form onSubmit={sendMessage} className="p-3 border-t border-white/10 flex gap-2">
+            <input 
+              type="text" 
+              value={messageText}
+              onChange={e => setMessageText(e.target.value)}
+              placeholder="Type message..."
+              className="flex-1 bg-[#151522] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#6C5CE7]"
+            />
+            <button type="submit" className="p-2 bg-[#6C5CE7] text-white rounded-xl">
+              <LucideIcons.Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="hidden md:flex flex-1 items-center justify-center text-gray-500 text-xs">
+          Select a chat thread to begin messaging
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreatorStudioSection({ db, setDb, showToast }) {
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-white">Creator Analytics Studio</h2>
+        <p className="text-xs text-gray-400">Track reach, engagement, and audience metrics.</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total Reach", val: "142.8K", inc: "+12.4%" },
+          { label: "Video Views", val: "89.2K", inc: "+24.1%" },
+          { label: "Engagement Rate", val: "8.4%", inc: "+1.2%" },
+          { label: "Est. Earnings", val: `$${db.currentUser.earnings.toFixed(2)}`, inc: "+18.9%" }
+        ].map((m, i) => (
+          <div key={i} className="p-4 rounded-2xl bg-[#151522] border border-white/10 space-y-1">
+            <p className="text-xs text-gray-400">{m.label}</p>
+            <h3 className="text-xl font-bold text-white">{m.val}</h3>
+            <p className="text-[10px] text-emerald-400 font-bold">{m.inc} this month</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ANALYTICS VISUALIZATION */}
+      <div className="p-5 rounded-2xl bg-[#151522] border border-white/10 space-y-4">
+        <h3 className="font-bold text-xs text-white">Monthly Impressions Trend</h3>
+        <div className="h-40 flex items-end justify-between gap-2 pt-6">
+          {[35, 60, 45, 80, 95, 70, 85, 100, 115, 90, 130, 145].map((h, i) => (
+            <div key={i} className="flex-1 bg-gradient-to-t from-[#6C5CE7] to-[#00CEC9] rounded-t-sm" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MonetizationSection({ db, setDb, showToast }) {
+  const minPayout = 10.0;
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-white">Monetization & Payout Hub</h2>
+        <p className="text-xs text-gray-400">Manage creator payout threshold ($10 min) and Stripe / Razorpay gateways.</p>
+      </div>
+
+      <div className="p-5 rounded-2xl bg-[#151522] border border-white/10 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-xs text-gray-400">Available Balance</p>
+            <h3 className="text-3xl font-black text-white">${db.currentUser.earnings.toFixed(2)}</h3>
+          </div>
+          <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full">
+            Status: Eligible
+          </span>
+        </div>
+
+        <p className="text-[10px] text-gray-400">Minimum payout threshold configured: ${minPayout.toFixed(2)}</p>
+
+        <button 
+          disabled={db.currentUser.earnings < minPayout}
+          onClick={() => {
+            setDb(prev => ({
+              ...prev,
+              currentUser: { ...prev.currentUser, earnings: 0 }
+            }));
+            showToast("Payout request submitted to Razorpay / Stripe gateway pipeline!", "success");
+          }}
+          className="w-full py-2.5 bg-[#00CEC9] hover:bg-[#00b5b0] disabled:opacity-40 text-gray-950 font-bold text-xs rounded-xl transition"
+        >
+          Request Payout Now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdsManagementSection({ db, setDb, showToast }) {
+  const [pubId, setPubId] = useState(db.adsConfig.publisherId);
+
+  const saveSettings = (e) => {
+    e.preventDefault();
+    setDb(prev => ({
+      ...prev,
+      adsConfig: { ...prev.adsConfig, publisherId: pubId }
+    }));
+    showToast("AdSense settings updated!");
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-white">Google AdSense & Campaigns Center</h2>
+        <p className="text-xs text-gray-400">Configure global platform ad units and publisher integration.</p>
+      </div>
+
+      <form onSubmit={saveSettings} className="p-5 rounded-2xl bg-[#151522] border border-white/10 space-y-4">
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">AdSense Publisher ID</label>
+          <input 
+            type="text" 
+            value={pubId}
+            onChange={e => setPubId(e.target.value)}
+            className="w-full bg-[#0B0B12] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#6C5CE7]"
+          />
+        </div>
+
+        <button type="submit" className="py-2 px-4 bg-[#6C5CE7] text-white font-bold text-xs rounded-xl">
+          Save Configuration
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function AdminPanelSection({ db, setDb, showToast }) {
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-red-400">System Admin Dashboard</h2>
+        <p className="text-xs text-gray-400">Platform moderation queues and global parameters.</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-[#151522] border border-white/10">
+          <p className="text-xs text-gray-400">Total Registered Users</p>
+          <h3 className="text-xl font-bold text-white">{db.adminStats.totalUsers.toLocaleString()}</h3>
+        </div>
+        <div className="p-4 rounded-2xl bg-[#151522] border border-white/10">
+          <p className="text-xs text-gray-400">Active Posts</p>
+          <h3 className="text-xl font-bold text-white">{db.posts.length}</h3>
+        </div>
+        <div className="p-4 rounded-2xl bg-[#151522] border border-white/10">
+          <p className="text-xs text-gray-400">Pending Reports</p>
+          <h3 className="text-xl font-bold text-red-400">{db.moderationQueue.length}</h3>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSection({ db, setDb, showToast }) {
+  return (
+    <div>
+      <div className="h-40 bg-gray-800">
+        <img src={db.currentUser.cover} className="w-full h-full object-cover" alt="" />
+      </div>
+
+      <div className="p-4 space-y-3 border-b border-white/10">
+        <div className="flex justify-between items-end -mt-14">
+          <img src={db.currentUser.avatar} className="w-20 h-20 rounded-full border-4 border-[#0B0B12] object-cover" alt="" />
+        </div>
+
+        <div>
+          <h2 className="font-extrabold text-base text-white">{db.currentUser.name}</h2>
+          <p className="text-xs text-gray-400">@{db.currentUser.username}</p>
+        </div>
+
+        <p className="text-xs text-gray-200">{db.currentUser.bio}</p>
+      </div>
+    </div>
+  );
+}
+
+function NotificationsSection({ db }) {
+  return (
+    <div className="p-4 space-y-3">
+      <h2 className="font-bold text-sm text-white">Notifications</h2>
+      {db.notifications.map(n => (
+        <div key={n.id} className="p-3 bg-[#151522] rounded-xl border border-white/10 text-xs">
+          <span className="font-bold text-white">{n.actor}</span> {n.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DiscoverSection({ db }) {
+  return (
+    <div className="p-4 space-y-3">
+      <h2 className="font-bold text-sm text-white">Discover Topics</h2>
+      <p className="text-xs text-gray-400">Explore global posts and trending creators across VYRO.</p>
+    </div>
+  );
+}
+
+function CreatePostModal({ db, setDb, onClose, showToast }) {
+  const [content, setContent] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+
+    const newPost = {
+      id: `custom_post_${Date.now()}`,
+      authorId: db.currentUser.id,
+      authorName: db.currentUser.name,
+      authorUsername: db.currentUser.username,
+      authorAvatar: db.currentUser.avatar,
+      verified: true,
+      timestamp: "Just now",
+      content,
+      mediaType: "NONE",
+      likes: 0,
+      comments: 0,
+      reposts: 0,
+      isLiked: false,
+      isBookmarked: false,
+      type: "ORGANIC"
+    };
+
+    setDb(prev => ({
+      ...prev,
+      posts: [newPost, ...prev.posts]
+    }));
+
+    showToast("Post published!", "success");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#151522] border border-white/10 rounded-2xl w-full max-w-md p-4 space-y-4">
+        <h3 className="font-bold text-sm text-white">Create New Post</h3>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <textarea 
+            rows={4}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder="Share your thoughts..."
+            className="w-full bg-[#0B0B12] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#6C5CE7]"
+          />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
+            <button type="submit" className="px-4 py-1.5 bg-[#6C5CE7] text-white font-bold text-xs rounded-xl">Publish</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function TipCreatorModal({ recipient, db, setDb, onClose, showToast }) {
+  const handleTip = (amount) => {
+    if (db.currentUser.coins < amount) {
+      showToast("Not enough coins!", "error");
+      return;
+    }
+
+    setDb(prev => ({
+      ...prev,
+      currentUser: { ...prev.currentUser, coins: prev.currentUser.coins - amount }
+    }));
+
+    showToast(`Tipped ${amount} VYRO coins to @${recipient.username}!`, "success");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#151522] border border-white/10 rounded-2xl w-full max-w-xs p-4 space-y-3 text-center">
+        <h3 className="font-bold text-sm text-white">Tip {recipient.name}</h3>
+        <div className="grid grid-cols-2 gap-2 pt-2">
+          {[20, 50, 100, 250].map(amt => (
+            <button 
+              key={amt} 
+              onClick={() => handleTip(amt)}
+              className="py-2 bg-white/5 hover:bg-[#6C5CE7] text-white font-bold text-xs rounded-xl border border-white/10 transition"
+            >
+              {amt} Coins
+            </button>
+          ))}
+        </div>
+        <button onClick={onClose} className="text-xs text-gray-400 mt-2 block mx-auto">Close</button>
+      </div>
+    </div>
+  );
+}
